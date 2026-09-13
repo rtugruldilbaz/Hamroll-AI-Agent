@@ -1,0 +1,34 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Runtime databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets and local configuration
+.env
+.env.*
+secrets.json
+secret.json
+internal.json
+config.json
+
+# Personal and runtime files
+documents/
+web_state.txt
+*.log
+
+# Editor and test files
+.vscode/
+.pytest_cache/
+
+# PyInstaller outputs
+build/
+dist/
+*.spec

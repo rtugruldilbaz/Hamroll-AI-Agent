@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ agent_name }} - {{ "Ayarlar" if language == "tr" else "Settings" }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body
+    class="settings-body"
+    data-language="{{ language }}"
+    data-csrf-token="{{ csrf_token }}"
+>
+    <div class="settings-page">
+        <header class="settings-topbar">
+            <div>
+                <a href="/" class="settings-back-link">
+                    ← {{ "Geri" if language == "tr" else "Back" }}
+                </a>
+
+                <h1>{{ "Ayarlar" if language == "tr" else "Settings" }}</h1>
+
+                <p>
+                    {{ "AI Agent yapılandırmasını yönetin." if language == "tr" else "Manage your AI Agent configuration." }}
+                </p>
+            </div>
+
+            <div class="settings-language">
+                <span>{{ "Dil" if language == "tr" else "Language" }}</span>
+
+                <button
+                    id="settingsLanguageButton"
+                    class="settings-language-button"
+                    type="button"
+                >
+                    {{ "TR Türkçe" if language == "tr" else "EN English" }}
+                </button>
+
+                <div
+                    id="settingsLanguageMenu"
+                    class="settings-language-menu"
+                    hidden
+                >
+                    <button type="button" data-language="tr">
+                        TR Türkçe
+                    </button>
+
+                    <button type="button" data-language="en">
+                        EN English
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        {% if error %}
+            <div class="settings-error-card">
+                {{ error }}
+            </div>
+
+        {% elif settings %}
+            <form id="settingsForm" class="settings-grid">
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>
+                                {{ "Genel" if language == "tr" else "General" }}
+                            </h2>
+
+                            <p>
+                                {{ "Agent kimliğini ve varsayılan dili ayarlayın." if language == "tr" else "Configure the Agent identity and default language." }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="agentName">
+                            {{ "Agent Adı" if language == "tr" else "Agent Name" }}
+                        </label>
+
+                        <input
+                            id="agentName"
+                            type="text"
+                            maxlength="50"
+                            value="{{ settings.general.agent_name }}"
+                        >
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="defaultLanguage">
+                            {{ "Varsayılan Dil" if language == "tr" else "Default Language" }}
+                        </label>
+
+                        <select id="defaultLanguage">
+                            <option
+                                value="tr"
+                                {{ "selected" if settings.general.language == "tr" else "" }}
+                            >
+                                TR Türkçe
+                            </option>
+
+                            <option
+                                value="en"
+                                {{ "selected" if settings.general.language == "en" else "" }}
+                            >
+                                EN English
+                            </option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>AI Model</h2>
+
+                            <p>
+                                {{ "Ollama bağlantısını ve sohbet modelini yönetin." if language == "tr" else "Manage the Ollama connection and chat model." }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="settings-field">
+                        <div class="settings-label-row">
+                            <label for="ollamaHost">
+                                Ollama Host
+                            </label>
+
+                            {% if settings.help.show_info_buttons %}
+                                <button
+                                    class="info-button"
+                                    type="button"
+                                    data-info="ollama-host"
+                                    aria-label="Info"
+                                >
+                                    i
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <input
+                            id="ollamaHost"
+                            type="text"
+                            value="{{ settings.model.ollama_host }}"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div
+                        id="info-ollama-host"
+                        class="settings-info-box"
+                        hidden
+                    >
+                        {% if language == "tr" %}
+                            <strong>Ollama Host nedir?</strong>
+
+                            <p>
+                                Ollama servisinin çalıştığı adresi belirtir.
+                                Ollama bu bilgisayara normal şekilde kurulduysa
+                                varsayılan http://localhost:11434 adresini değiştirmeniz gerekmez.
+                            </p>
+
+                            <p>
+                                Ollama başka bir bilgisayarda çalışıyorsa o bilgisayarın IP adresini kullanabilirsiniz.
+                                Windows üzerinde Komut İstemi'nde ipconfig çalıştırıp IPv4 Address değerine bakabilirsiniz.
+                            </p>
+
+                            <p>
+                                Örnek: http://192.168.1.50:11434
+                            </p>
+                        {% else %}
+                            <strong>What is Ollama Host?</strong>
+
+                            <p>
+                                This specifies the address where the Ollama service is running.
+                                If Ollama is installed normally on this computer,
+                                keep the default http://localhost:11434 address.
+                            </p>
+
+                            <p>
+                                If Ollama runs on another computer, use that computer's IP address.
+                                On Windows, run ipconfig in Command Prompt and find the IPv4 Address value.
+                            </p>
+
+                            <p>
+                                Example: http://192.168.1.50:11434
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="settings-field">
+                        <div class="settings-label-row">
+                            <label for="chatModel">
+                                {{ "Sohbet Modeli" if language == "tr" else "Chat Model" }}
+                            </label>
+
+                            {% if settings.help.show_info_buttons %}
+                                <button
+                                    class="info-button"
+                                    type="button"
+                                    data-info="chat-model"
+                                    aria-label="Info"
+                                >
+                                    i
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <input
+                            id="chatModel"
+                            type="text"
+                            value="{{ settings.model.chat_model }}"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div
+                        id="info-chat-model"
+                        class="settings-info-box"
+                        hidden
+                    >
+                        {% if language == "tr" %}
+                            <strong>Model nasıl değiştirilir?</strong>
+
+                            <p>
+                                Önce Ollama'yı bilgisayarınıza kurun ve kullanmak istediğiniz modeli Ollama üzerinden indirin.
+                            </p>
+
+                            <p>
+                                Daha sonra modelin tam adını bu alana yazın.
+                                Örnek: qwen2.5:7b
+                            </p>
+
+                            <p>
+                                Agent araç kullandığı için tool/function calling desteği iyi olan modeller önerilir.
+                            </p>
+                        {% else %}
+                            <strong>How do I change the model?</strong>
+
+                            <p>
+                                Install Ollama first and download the model you want to use through Ollama.
+                            </p>
+
+                            <p>
+                                Then enter the exact model name here.
+                                Example: qwen2.5:7b
+                            </p>
+
+                            <p>
+                                Models with reliable tool/function calling support are recommended because the Agent uses tools.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="settings-actions-row">
+                        <button
+                            id="testOllamaButton"
+                            class="settings-secondary-button"
+                            type="button"
+                        >
+                            {{ "Bağlantıyı Test Et" if language == "tr" else "Test Connection" }}
+                        </button>
+
+                        <span
+                            id="ollamaStatus"
+                            class="settings-status"
+                        ></span>
+                    </div>
+
+                    <div class="settings-readonly-row">
+                        <span>
+                            {{ "Embedding Modeli" if language == "tr" else "Embedding Model" }}
+                        </span>
+
+                        <strong>
+                            {{ settings.model.embedding_model }}
+                        </strong>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>Web</h2>
+
+                            <p>
+                                {{ "Web arayüzünün çalışmasını ve ağ erişimini yönetin." if language == "tr" else "Control the Web interface and network access." }}
+                            </p>
+                        </div>
+
+                        <label class="settings-switch">
+                            <input
+                                id="webEnabled"
+                                type="checkbox"
+                                {{ "checked" if settings.web.enabled else "" }}
+                            >
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-state-line">
+                        <span>
+                            {{ "Web Arayüzü" if language == "tr" else "Web Interface" }}
+                        </span>
+
+                        <strong id="webStateText">
+                            {{ "Açık" if settings.web.enabled and language == "tr" else "Kapalı" if not settings.web.enabled and language == "tr" else "Enabled" if settings.web.enabled else "Disabled" }}
+                        </strong>
+                    </div>
+
+                    <div class="settings-field">
+                        <label>
+                            {{ "Ağ Erişimi" if language == "tr" else "Network Access" }}
+                        </label>
+
+                        <div class="settings-choice-row">
+                            <label class="settings-choice">
+                                <input
+                                    type="radio"
+                                    name="webAccess"
+                                    value="local"
+                                    {{ "checked" if settings.web.access == "local" else "" }}
+                                >
+
+                                <span>
+                                    {{ "Yalnızca bu bilgisayar" if language == "tr" else "This computer only" }}
+                                </span>
+                            </label>
+
+                            <label class="settings-choice">
+                                <input
+                                    type="radio"
+                                    name="webAccess"
+                                    value="lan"
+                                    {{ "checked" if settings.web.access == "lan" else "" }}
+                                >
+
+                                <span>
+                                    {{ "Yerel Ağ" if language == "tr" else "Local Network" }}
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div
+                        id="lanWarning"
+                        class="settings-warning"
+                        {{ "" if settings.web.access == "lan" else "hidden" }}
+                    >
+                        {{ "Yerel ağ modu aynı ağdaki diğer cihazların Web arayüzüne erişmesine izin verir." if language == "tr" else "Local network mode allows other devices on the same network to access the Web interface." }}
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="webPort">
+                            Port
+                        </label>
+
+                        <input
+                            id="webPort"
+                            type="number"
+                            min="1024"
+                            max="65535"
+                            value="{{ settings.web.port }}"
+                        >
+                    </div>
+
+                    <label class="settings-checkbox-row">
+                        <input
+                            id="openBrowser"
+                            type="checkbox"
+                            {{ "checked" if settings.web.open_browser else "" }}
+                        >
+
+                        <span>
+                            {{ "Başlangıçta Web arayüzünü otomatik aç" if language == "tr" else "Open the Web interface automatically at startup" }}
+                        </span>
+                    </label>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>Telegram</h2>
+
+                            <p>
+                                {{ "Telegram bot bağlantısını yönetin." if language == "tr" else "Manage the Telegram bot connection." }}
+                            </p>
+                        </div>
+
+                        <label class="settings-switch">
+                            <input
+                                id="telegramEnabled"
+                                type="checkbox"
+                                {{ "checked" if settings.telegram.enabled else "" }}
+                            >
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-state-line">
+                        <span>Telegram</span>
+
+                        <strong id="telegramStateText">
+                            {{ "Açık" if settings.telegram.enabled and language == "tr" else "Kapalı" if not settings.telegram.enabled and language == "tr" else "Enabled" if settings.telegram.enabled else "Disabled" }}
+                        </strong>
+                    </div>
+
+                    <div class="settings-field">
+                        <div class="settings-label-row">
+                            <label for="telegramToken">
+                                Bot Token
+                            </label>
+
+                            {% if settings.help.show_info_buttons %}
+                                <button
+                                    class="info-button"
+                                    type="button"
+                                    data-info="telegram"
+                                    aria-label="Info"
+                                >
+                                    i
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="settings-secret-field">
+                            <input
+                                id="telegramToken"
+                                type="password"
+                                value="{{ settings.telegram.bot_token }}"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                id="toggleTelegramToken"
+                                type="button"
+                                class="settings-secret-toggle"
+                            >
+                                {{ "Göster" if language == "tr" else "Show" }}
+                            </button>
+                        </div>
+
+                        {% if settings.telegram.bot_token_configured %}
+                            <div class="settings-field-note">
+                                ✓ {{ "Yapılandırıldı. Değer varsayılan olarak maskelidir." if language == "tr" else "Configured. The value is masked by default." }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="telegramUserId">
+                            Authorized User ID
+                        </label>
+
+                        <div class="settings-secret-field">
+                            <input
+                                id="telegramUserId"
+                                type="password"
+                                inputmode="numeric"
+                                value="{{ settings.telegram.authorized_user_id }}"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                id="toggleTelegramUserId"
+                                type="button"
+                                class="settings-secret-toggle"
+                            >
+                                {{ "Göster" if language == "tr" else "Show" }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        id="info-telegram"
+                        class="settings-info-box"
+                        hidden
+                    >
+                        {% if language == "tr" %}
+                            <strong>Telegram nasıl kurulur?</strong>
+
+                            <p>
+                                Telegram'da @BotFather hesabını açın ve /newbot komutunu gönderin.
+                            </p>
+
+                            <p>
+                                BotFather tarafından verilen Bot Token değerini Bot Token alanına yapıştırın.
+                            </p>
+
+                            <p>
+                                Authorized User ID alanına kendi sayısal Telegram kullanıcı ID'nizi girin.
+                            </p>
+
+                            <p>
+                                Telegram kapatıldığında kayıtlı bilgiler silinmez.
+                            </p>
+                        {% else %}
+                            <strong>How do I set up Telegram?</strong>
+
+                            <p>
+                                Open @BotFather in Telegram and send /newbot.
+                            </p>
+
+                            <p>
+                                Paste the Bot Token provided by BotFather into the Bot Token field.
+                            </p>
+
+                            <p>
+                                Enter your numeric Telegram user ID in Authorized User ID.
+                            </p>
+
+                            <p>
+                                Saved credentials are not deleted when Telegram is disabled.
+                            </p>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>
+                                {{ "Yerel Sesli Komut" if language == "tr" else "Local Voice Command" }}
+                            </h2>
+
+                            <p>
+                                {{ "Sesli komut kısayolunu ve nerede etkin olacağını yönetin." if language == "tr" else "Manage the voice hotkey and where it is active." }}
+                            </p>
+                        </div>
+
+                        <label class="settings-switch">
+                            <input
+                                id="voiceEnabled"
+                                type="checkbox"
+                                {{ "checked" if settings.voice.enabled else "" }}
+                            >
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-state-line">
+                        <span>
+                            {{ "Sesli Komut" if language == "tr" else "Voice Command" }}
+                        </span>
+
+                        <strong id="voiceStateText">
+                            {{ "Açık" if settings.voice.enabled and language == "tr" else "Kapalı" if not settings.voice.enabled and language == "tr" else "Enabled" if settings.voice.enabled else "Disabled" }}
+                        </strong>
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="voiceScope">
+                            {{ "Çalışma Kapsamı" if language == "tr" else "Activation Scope" }}
+                        </label>
+
+                        <select id="voiceScope">
+                            <option value="global" {{ "selected" if settings.voice.scope == "global" else "" }}>
+                                {{ "Bilgisayar genelinde" if language == "tr" else "Across the computer" }}
+                            </option>
+                            <option value="local_admin" {{ "selected" if settings.voice.scope == "local_admin" else "" }}>
+                                {{ "Yalnız Local Admin Chat açıkken" if language == "tr" else "Only while Local Admin Chat is open" }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="settings-field">
+                        <div class="settings-label-row">
+                            <label for="voiceHotkey">
+                                {{ "Kısayol Tuşu" if language == "tr" else "Hotkey" }}
+                            </label>
+
+                            {% if settings.help.show_info_buttons %}
+                                <button
+                                    class="info-button"
+                                    type="button"
+                                    data-info="voice-hotkey"
+                                    aria-label="Info"
+                                >
+                                    i
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="settings-hotkey-row">
+                            <input
+                                id="voiceHotkey"
+                                type="text"
+                                value="{{ settings.voice.hotkey }}"
+                                readonly
+                            >
+
+                            <button
+                                id="changeHotkeyButton"
+                                class="settings-secondary-button"
+                                type="button"
+                            >
+                                {{ "Tuşu Değiştir" if language == "tr" else "Change Hotkey" }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        id="hotkeyCapture"
+                        class="settings-hotkey-capture"
+                        hidden
+                    >
+                        {{ "Yeni kısayol kombinasyonuna basın..." if language == "tr" else "Press the new hotkey combination..." }}
+                    </div>
+
+                    <div
+                        id="info-voice-hotkey"
+                        class="settings-info-box"
+                        hidden
+                    >
+                        {% if language == "tr" %}
+                            <strong>Sesli komut kısayolu</strong>
+
+                            <p>
+                                Çalışma Kapsamı ayarıyla kısayolu bilgisayar genelinde veya yalnız Local Admin Chat açıkken etkinleştirebilirsiniz.
+                            </p>
+
+                            <p>
+                                Sesli komutlar Local Admin kimliğiyle çalışır ve Local Admin'in Safe veya Custom dosya erişimini kullanır.
+                            </p>
+
+                            <p>
+                                Web ve Telegram bu Custom Local Access izinlerini kullanamaz.
+                            </p>
+                        {% else %}
+                            <strong>Voice hotkey</strong>
+
+                            <p>
+                                Activation Scope makes the hotkey active across the computer or only while Local Admin Chat is open.
+                            </p>
+
+                            <p>
+                                Voice commands run as the Local Admin identity and use its Safe or Custom file access.
+                            </p>
+
+                            <p>
+                                Web and Telegram cannot use these Custom Local Access permissions.
+                            </p>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <div class="settings-label-row">
+                                <h2>
+                                    {{ "Yerel Admin" if language == "tr" else "Local Admin" }}
+                                </h2>
+
+                                {% if settings.help.show_info_buttons %}
+                                    <button
+                                        class="info-button"
+                                        type="button"
+                                        data-info="local-admin-access"
+                                        aria-label="Info"
+                                    >
+                                        i
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            <p>
+                                {{ "Yerel Agent konsolunu ve dosya erişim seviyesini yönetin." if language == "tr" else "Manage the local Agent console and its file access level." }}
+                            </p>
+                        </div>
+
+                        <label class="settings-switch">
+                            <input
+                                id="localAdminEnabled"
+                                type="checkbox"
+                                {{ "checked" if settings.local_admin.enabled else "" }}
+                            >
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div
+                        id="info-local-admin-access"
+                        class="settings-info-box"
+                        hidden
+                    >
+                        {% if language == "tr" %}
+                            <strong>Custom Local Access nedir?</strong>
+
+                            <p>
+                                Bu özellik yalnızca bu bilgisayardaki Local Admin Console ve yerel sesli komutlar için ek klasör erişimi sağlar.
+                            </p>
+
+                            <p>
+                                Web Admin ve Telegram bu klasör izinlerini kullanamaz.
+                                Bu ayrım backend güvenlik katmanında uygulanır.
+                            </p>
+
+                            <p>
+                                Final masaüstü EXE sürümünde Browse Folder düğmesi Windows klasör seçicisini açacaktır.
+                                Geliştirme sürümünde klasör yolunu manuel olarak ekleyebilirsiniz.
+                            </p>
+
+                            <p>
+                                Custom erişim seçtiğiniz klasörlerde Agent'ın dosya okumasına ve izin verilen dosya işlemlerini gerçekleştirmesine olanak tanır.
+                            </p>
+
+                            <p>
+                                AI Agent ayarları, secrets dosyaları, proje güvenlik dosyaları ve kritik Windows sistem alanları Custom Access ile açılmaz.
+                            </p>
+
+                            <p>
+                                Dosya silme, taşıma, yeniden adlandırma ve yazma gibi işlemlerde mevcut kullanıcı onay sistemi devam eder.
+                            </p>
+                        {% else %}
+                            <strong>What is Custom Local Access?</strong>
+
+                            <p>
+                                This feature grants additional folder access only to the Local Admin Console and local voice commands on this computer.
+                            </p>
+
+                            <p>
+                                Web Admin and Telegram cannot use these folder permissions.
+                                This separation is enforced by the backend security layer.
+                            </p>
+
+                            <p>
+                                In the final desktop EXE, Browse Folder will open the native Windows folder picker.
+                                During development, paths can be added manually.
+                            </p>
+
+                            <p>
+                                Custom access allows the Agent to read and perform permitted file operations inside folders you authorize.
+                            </p>
+
+                            <p>
+                                AI Agent settings, secret files, security files and critical Windows system locations remain protected.
+                            </p>
+
+                            <p>
+                                Existing confirmation checks remain active for delete, move, rename and write operations.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="settings-field">
+                        <label>
+                            {{ "Yerel Dosya Erişimi" if language == "tr" else "Local File Access" }}
+                        </label>
+
+                        <div class="settings-access-options">
+                            <label class="settings-access-card">
+                                <input
+                                    type="radio"
+                                    name="localAccessMode"
+                                    value="safe"
+                                    {{ "checked" if settings.local_admin.access_mode == "safe" else "" }}
+                                >
+
+                                <span>
+                                    <strong>Safe</strong>
+
+                                    <small>
+                                        {{ "Desktop, Documents ve Downloads" if language == "tr" else "Desktop, Documents and Downloads" }}
+                                    </small>
+                                </span>
+                            </label>
+
+                            <label class="settings-access-card">
+                                <input
+                                    type="radio"
+                                    name="localAccessMode"
+                                    value="custom"
+                                    {{ "checked" if settings.local_admin.access_mode == "custom" else "" }}
+                                >
+
+                                <span>
+                                    <strong>Custom</strong>
+
+                                    <small>
+                                        {{ "Safe klasörler + açıkça yetkilendirdiğiniz klasörler" if language == "tr" else "Safe folders + folders you explicitly authorize" }}
+                                    </small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div
+                        id="customAccessPanel"
+                        {{ "" if settings.local_admin.access_mode == "custom" else "hidden" }}
+                    >
+                        <div class="settings-subsection-title">
+                            {{ "Yetkili Klasörler" if language == "tr" else "Authorized Folders" }}
+                        </div>
+
+                        <div
+                            id="customPathList"
+                            class="settings-path-list"
+                        >
+                            {% for path in settings.local_admin.allowed_paths %}
+                                <div
+                                    class="settings-path-item"
+                                    data-path="{{ path }}"
+                                >
+                                    <span>{{ path }}</span>
+
+                                    <button
+                                        type="button"
+                                        class="remove-custom-path"
+                                        aria-label="Remove"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="settings-path-actions">
+                            <button
+                                id="browseFolderButton"
+                                class="settings-secondary-button"
+                                type="button"
+                                disabled
+                            >
+                                + {{ "Klasör Seç" if language == "tr" else "Browse Folder" }}
+                            </button>
+
+                            <button
+                                id="showManualPathButton"
+                                class="settings-secondary-button"
+                                type="button"
+                            >
+                                {{ "Yolu Manuel Ekle" if language == "tr" else "Add Path Manually" }}
+                            </button>
+                        </div>
+
+                        <div class="settings-muted-text">
+                            {{ "Klasör Seç düğmesi final masaüstü EXE'de Windows klasör seçicisiyle aktif olacaktır." if language == "tr" else "Browse Folder will use the native Windows folder picker in the final desktop EXE." }}
+                        </div>
+
+                        <div
+                            id="manualPathPanel"
+                            class="settings-manual-path"
+                            hidden
+                        >
+                            <input
+                                id="manualCustomPath"
+                                type="text"
+                                placeholder="{{ 'Örnek: C:\\Projects' if language == 'tr' else 'Example: C:\\Projects' }}"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                id="addManualPathButton"
+                                class="settings-secondary-button"
+                                type="button"
+                            >
+                                {{ "Ekle" if language == "tr" else "Add" }}
+                            </button>
+                        </div>
+
+                        <div
+                            id="customPathStatus"
+                            class="settings-status"
+                        ></div>
+
+                        <div class="settings-warning settings-danger-warning">
+                            {% if language == "tr" %}
+                                <strong>Dikkat</strong>
+
+                                <p>
+                                    Custom Local Access, AI Agent'ın seçtiğiniz klasörlerde dosya oluşturmasına, değiştirmesine, taşımasına veya silmesine izin verebilir.
+                                    Yanlış veya yanlış anlaşılan bir komut veri kaybına ya da bazı uygulamaların çalışmamasına neden olabilir.
+                                </p>
+
+                                <p>
+                                    Bu erişim yalnızca Local Admin Console ve yerel sesli komutlar içindir.
+                                    Web ve Telegram bu ek izinleri kullanamaz.
+                                </p>
+                            {% else %}
+                                <strong>Warning</strong>
+
+                                <p>
+                                    Custom Local Access may allow AI Agent to create, modify, move or delete files inside folders you authorize.
+                                    An incorrect or misunderstood command may cause data loss or prevent applications from working correctly.
+                                </p>
+
+                                <p>
+                                    This access is only available to the Local Admin Console and local voice commands.
+                                    Web and Telegram cannot use these additional permissions.
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <label class="settings-checkbox-row settings-risk-checkbox">
+                            <input
+                                id="customAccessAcknowledged"
+                                type="checkbox"
+                                {{ "checked" if settings.local_admin.custom_access_acknowledged else "" }}
+                            >
+
+                            <span>
+                                {{ "Custom Local Access kullanmanın risklerini anlıyorum ve seçtiğim klasörlere verdiğim erişimin sorumluluğunu kabul ediyorum." if language == "tr" else "I understand the risks of Custom Local Access and accept responsibility for the folders I authorize." }}
+                            </span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>Web Admin</h2>
+
+                            <p>
+                                {{ "Web arayüzündeki yönetici hesabını belirleyin." if language == "tr" else "Configure the administrator account for the Web interface." }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if settings.web_admin.configured %}
+                        <div class="settings-admin-status">
+                            <span>
+                                {{ "Mevcut Admin" if language == "tr" else "Current Admin" }}
+                            </span>
+
+                            <strong>
+                                {{ settings.web_admin.username }}
+                            </strong>
+                        </div>
+                    {% else %}
+                        <div class="settings-warning">
+                            {{ "Henüz bir Web admin hesabı oluşturulmadı." if language == "tr" else "No Web admin account has been created yet." }}
+                        </div>
+                    {% endif %}
+
+                    <div class="settings-field">
+                        <label for="webAdminUsername">
+                            {{ "Admin Kullanıcı Adı" if language == "tr" else "Admin Username" }}
+                        </label>
+
+                        <input
+                            id="webAdminUsername"
+                            type="text"
+                            value="{{ settings.web_admin.username }}"
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="settings-field">
+                        <label for="webAdminPassword">
+                            {{ "Yeni Admin Şifresi" if settings.web_admin.configured and language == "tr" else "New Admin Password" if settings.web_admin.configured else "Admin Şifresi" if language == "tr" else "Admin Password" }}
+                        </label>
+
+                        <input
+                            id="webAdminPassword"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="{{ 'Değiştirmek istemiyorsanız boş bırakın' if settings.web_admin.configured and language == 'tr' else 'Leave empty to keep the current password' if settings.web_admin.configured else '' }}"
+                        >
+                    </div>
+                </section>
+
+                {% if settings.web_admin.configured %}
+                    <section class="settings-section">
+                        <div class="settings-section-head">
+                            <div>
+                                <h2>
+                                    {{ "Veri ve Geçmiş" if language == "tr" else "Data & History" }}
+                                </h2>
+
+                                <p>
+                                    {{ "AI Agent tarafından saklanan konuşma geçmişi ve misafir kullanım kayıtlarını yönetin." if language == "tr" else "Manage conversation history and guest usage records stored by AI Agent." }}
+                                </p>
+                            </div>
+
+                            <button
+                                id="refreshDataSummary"
+                                class="settings-secondary-button"
+                                type="button"
+                            >
+                                {{ "Yenile" if language == "tr" else "Refresh" }}
+                            </button>
+                        </div>
+
+                        <div class="settings-warning">
+                            {% if language == "tr" %}
+                                Bu bölüm yalnızca bu bilgisayardan Web Admin olarak kullanılabilir.
+                                Silinen geçmiş geri alınamaz.
+                                Normal Web kullanıcıları kendi geçmişlerini silemez.
+                            {% else %}
+                                This section is available only to the Web Admin on this computer.
+                                Deleted history cannot be restored.
+                                Regular Web users cannot delete their own history.
+                            {% endif %}
+                        </div>
+
+                        <div class="settings-field">
+                            <div class="settings-readonly-row">
+                                <span>
+                                    {{ "Local Admin / Terminal Geçmişi" if language == "tr" else "Local Admin / Terminal History" }}
+                                </span>
+
+                                <strong id="localHistoryCount">—</strong>
+                            </div>
+
+                            <div class="settings-actions-row">
+                                <button
+                                    class="settings-secondary-button data-clear-button"
+                                    type="button"
+                                    data-endpoint="/settings/clear-local-history"
+                                    data-target="localHistoryCount"
+                                    data-kind="local"
+                                >
+                                    {{ "Yerel Geçmişi Temizle" if language == "tr" else "Clear Local History" }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settings-field">
+                            <div class="settings-readonly-row">
+                                <span>
+                                    {{ "Telegram Geçmişi" if language == "tr" else "Telegram History" }}
+                                </span>
+
+                                <strong id="telegramHistoryCount">—</strong>
+                            </div>
+
+                            <div class="settings-actions-row">
+                                <button
+                                    class="settings-secondary-button data-clear-button"
+                                    type="button"
+                                    data-endpoint="/settings/clear-telegram-history"
+                                    data-target="telegramHistoryCount"
+                                    data-kind="telegram"
+                                >
+                                    {{ "Telegram Geçmişini Temizle" if language == "tr" else "Clear Telegram History" }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settings-field">
+                            <div class="settings-readonly-row">
+                                <span>
+                                    {{ "Tüm Web Mesajları" if language == "tr" else "All Web Messages" }}
+                                </span>
+
+                                <strong id="webHistoryCount">—</strong>
+                            </div>
+
+                            <div class="settings-actions-row">
+                                <button
+                                    class="settings-secondary-button data-clear-button"
+                                    type="button"
+                                    data-endpoint="/settings/clear-web-history"
+                                    data-target="webHistoryCount"
+                                    data-kind="web"
+                                >
+                                    {{ "Tüm Web Geçmişini Temizle" if language == "tr" else "Clear All Web History" }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settings-field">
+                            <div class="settings-readonly-row">
+                                <span>
+                                    {{ "Misafir Kullanım Kayıtları" if language == "tr" else "Guest Usage Records" }}
+                                </span>
+
+                                <strong id="guestUsageCount">—</strong>
+                            </div>
+
+                            <div class="settings-actions-row">
+                                <button
+                                    class="settings-secondary-button data-clear-button"
+                                    type="button"
+                                    data-endpoint="/settings/clear-guest-usage"
+                                    data-target="guestUsageCount"
+                                    data-kind="guest"
+                                >
+                                    {{ "Misafir Sayaçlarını Temizle" if language == "tr" else "Clear Guest Usage" }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            id="dataHistoryStatus"
+                            class="settings-status"
+                        ></div>
+                    </section>
+                {% endif %}
+
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <div>
+                            <h2>
+                                {{ "Yardım ve Bilgi" if language == "tr" else "Help & Info" }}
+                            </h2>
+
+                            <p>
+                                {{ "Ayarlar sayfasındaki bilgi düğmelerini yönetin." if language == "tr" else "Control information buttons throughout Settings." }}
+                            </p>
+                        </div>
+
+                        <label class="settings-switch">
+                            <input
+                                id="showInfoButtons"
+                                type="checkbox"
+                                {{ "checked" if settings.help.show_info_buttons else "" }}
+                            >
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-info-static">
+                        {{ "Bilgi düğmeleri varsayılan olarak açıktır. Kapatıldığında küçük i düğmeleri gizlenir." if language == "tr" else "Information buttons are enabled by default. Disabling this option hides the small i buttons." }}
+                    </div>
+                </section>
+
+                <div class="settings-save-panel">
+                    <div>
+                        <strong>
+                            {{ "Değişiklikler yeniden başlatma gerektirir" if language == "tr" else "Changes require a restart" }}
+                        </strong>
+
+                        <p>
+                            {{ "Ayarları kaydettikten sonra AI Agent'ı yeniden başlatın." if language == "tr" else "Restart AI Agent after saving Settings." }}
+                        </p>
+                    </div>
+
+                    <div class="settings-save-actions">
+                        <div
+                            id="settingsResult"
+                            class="settings-result"
+                            hidden
+                        ></div>
+
+                        <button
+                            id="saveSettingsButton"
+                            class="settings-save-button"
+                            type="submit"
+                        >
+                            {{ "Ayarları Kaydet" if language == "tr" else "Save Settings" }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <script>
+        const currentLanguage =
+            document.body.dataset.language === "en"
+                ? "en"
+                : "tr";
+
+        let csrfToken =
+            document.body.dataset.csrfToken || "";
+
+        const settingsForm =
+            document.getElementById("settingsForm");
+
+        const ui = {
+            tr: {
+                enabled: "Açık",
+                disabled: "Kapalı",
+                show: "Göster",
+                hide: "Gizle",
+                testing: "Test ediliyor...",
+                saving: "Kaydediliyor...",
+                loading: "Yükleniyor...",
+                requestFailed: "İşlem tamamlanamadı.",
+                pathEmpty: "Önce bir klasör yolu girin.",
+                pathAdded: "Klasör listeye eklendi.",
+                pathExists: "Bu klasör zaten listede.",
+                riskRequired: "Custom Local Access için riskleri kabul etmeniz gerekir.",
+                hotkeyCapture: "Yeni kısayol kombinasyonuna basın...",
+                hotkeySingleWarning: "Tek bir harf global kısayol olarak normal yazmayı etkileyebilir.",
+                dataLoaded: "Veri özeti güncellendi.",
+                dataCleared: count => `${count} kayıt silindi.`,
+                confirm: {
+                    local: "Local Admin / Terminal geçmişini silmek istediğinize emin misiniz?",
+                    telegram: "Tüm Telegram geçmişini silmek istediğinize emin misiniz?",
+                    web: "TÜM Web kullanıcılarının konuşma geçmişini silmek istediğinize emin misiniz?",
+                    guest: "Tüm misafir kullanım sayaçlarını silmek istediğinize emin misiniz?"
+                }
+            },
+            en: {
+                enabled: "Enabled",
+                disabled: "Disabled",
+                show: "Show",
+                hide: "Hide",
+                testing: "Testing...",
+                saving: "Saving...",
+                loading: "Loading...",
+                requestFailed: "The operation could not be completed.",
+                pathEmpty: "Enter a folder path first.",
+                pathAdded: "Folder added to the list.",
+                pathExists: "This folder is already in the list.",
+                riskRequired: "You must acknowledge the risks before enabling Custom Local Access.",
+                hotkeyCapture: "Press the new hotkey combination...",
+                hotkeySingleWarning: "Using a single letter as a global hotkey may interfere with normal typing.",
+                dataLoaded: "Data summary updated.",
+                dataCleared: count => `${count} records deleted.`,
+                confirm: {
+                    local: "Are you sure you want to delete Local Admin / Terminal history?",
+                    telegram: "Are you sure you want to delete all Telegram history?",
+                    web: "Are you sure you want to delete conversation history for ALL Web users?",
+                    guest: "Are you sure you want to delete all guest usage counters?"
+                }
+            }
+        }[currentLanguage];
+
+        const csrfHeaders = () => ({
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
+        });
+
+        async function readJson(response) {
+            try {
+                return await response.json();
+            } catch {
+                return {};
+            }
+        }
+
+        const languageButton =
+            document.getElementById("settingsLanguageButton");
+
+        const languageMenu =
+            document.getElementById("settingsLanguageMenu");
+
+        if (languageButton && languageMenu) {
+            languageButton.addEventListener("click", () => {
+                languageMenu.hidden = !languageMenu.hidden;
+            });
+
+            languageMenu
+                .querySelectorAll("[data-language]")
+                .forEach(button => {
+                    button.addEventListener("click", async () => {
+                        const response = await fetch("/language", {
+                            method: "POST",
+                            headers: csrfHeaders(),
+                            body: JSON.stringify({
+                                language: button.dataset.language
+                            })
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                });
+        }
+
+        if (settingsForm) {
+            document
+                .querySelectorAll(".info-button")
+                .forEach(button => {
+                    button.addEventListener("click", () => {
+                        const box =
+                            document.getElementById(
+                                `info-${button.dataset.info}`
+                            );
+
+                        if (box) {
+                            box.hidden = !box.hidden;
+                        }
+                    });
+                });
+
+            function bindState(inputId, textId) {
+                const input =
+                    document.getElementById(inputId);
+
+                const text =
+                    document.getElementById(textId);
+
+                if (!input || !text) {
+                    return;
+                }
+
+                input.addEventListener("change", () => {
+                    text.textContent =
+                        input.checked
+                            ? ui.enabled
+                            : ui.disabled;
+                });
+            }
+
+            bindState(
+                "webEnabled",
+                "webStateText"
+            );
+
+            bindState(
+                "telegramEnabled",
+                "telegramStateText"
+            );
+
+            bindState(
+                "voiceEnabled",
+                "voiceStateText"
+            );
+
+            const lanWarning =
+                document.getElementById("lanWarning");
+
+            document
+                .querySelectorAll('input[name="webAccess"]')
+                .forEach(input => {
+                    input.addEventListener("change", () => {
+                        const selected =
+                            document.querySelector(
+                                'input[name="webAccess"]:checked'
+                            );
+
+                        if (lanWarning) {
+                            lanWarning.hidden =
+                                !selected
+                                || selected.value !== "lan";
+                        }
+                    });
+                });
+
+            const telegramToken =
+                document.getElementById("telegramToken");
+
+            const tokenToggle =
+                document.getElementById("toggleTelegramToken");
+
+            if (telegramToken && tokenToggle) {
+                tokenToggle.addEventListener("click", () => {
+                    const visible =
+                        telegramToken.type === "text";
+
+                    telegramToken.type =
+                        visible
+                            ? "password"
+                            : "text";
+
+                    tokenToggle.textContent =
+                        visible
+                            ? ui.show
+                            : ui.hide;
+                });
+            }
+
+            const telegramUserId =
+                document.getElementById("telegramUserId");
+
+            const userIdToggle =
+                document.getElementById("toggleTelegramUserId");
+
+            if (telegramUserId && userIdToggle) {
+                userIdToggle.addEventListener("click", () => {
+                    const visible =
+                        telegramUserId.type === "text";
+
+                    telegramUserId.type =
+                        visible
+                            ? "password"
+                            : "text";
+
+                    userIdToggle.textContent =
+                        visible
+                            ? ui.show
+                            : ui.hide;
+                });
+            }
+
+            const testOllamaButton =
+                document.getElementById("testOllamaButton");
+
+            const ollamaStatus =
+                document.getElementById("ollamaStatus");
+
+            if (testOllamaButton && ollamaStatus) {
+                testOllamaButton.addEventListener("click", async () => {
+                    const oldText =
+                        testOllamaButton.textContent;
+
+                    testOllamaButton.disabled = true;
+                    testOllamaButton.textContent =
+                        ui.testing;
+
+                    try {
+                        const response =
+                            await fetch(
+                                "/settings/test-ollama",
+                                {
+                                    method: "POST",
+                                    headers: csrfHeaders(),
+                                    body: JSON.stringify({
+                                        host:
+                                            document
+                                                .getElementById("ollamaHost")
+                                                .value
+                                                .trim(),
+                                        model:
+                                            document
+                                                .getElementById("chatModel")
+                                                .value
+                                                .trim()
+                                    })
+                                }
+                            );
+
+                        const data =
+                            await readJson(response);
+
+                        const baseMessage =
+                            data.message
+                            || data.error
+                            || ui.requestFailed;
+
+                        const embeddingMessage =
+                            data.connected
+                                ? ` · ${data.embedding_model || "nomic-embed-text"}: ${data.embedding_found ? "✓" : "✗"}`
+                                : "";
+
+                        ollamaStatus.textContent =
+                            baseMessage + embeddingMessage;
+
+                        ollamaStatus.dataset.state =
+                            data.connected
+                                ? data.model_found === false || data.embedding_found === false
+                                    ? "warning"
+                                    : "success"
+                                : "error";
+
+                    } catch {
+                        ollamaStatus.textContent =
+                            ui.requestFailed;
+
+                        ollamaStatus.dataset.state =
+                            "error";
+
+                    } finally {
+                        testOllamaButton.disabled = false;
+                        testOllamaButton.textContent =
+                            oldText;
+                    }
+                });
+            }
+
+            const localAccessInputs =
+                document.querySelectorAll(
+                    'input[name="localAccessMode"]'
+                );
+
+            const customAccessPanel =
+                document.getElementById("customAccessPanel");
+
+            function updateLocalAccessPanel() {
+                const selected =
+                    document.querySelector(
+                        'input[name="localAccessMode"]:checked'
+                    );
+
+                if (customAccessPanel) {
+                    customAccessPanel.hidden =
+                        !selected
+                        || selected.value !== "custom";
+                }
+            }
+
+            localAccessInputs.forEach(input => {
+                input.addEventListener(
+                    "change",
+                    updateLocalAccessPanel
+                );
+            });
+
+            const showManualPathButton =
+                document.getElementById("showManualPathButton");
+
+            const manualPathPanel =
+                document.getElementById("manualPathPanel");
+
+            const manualPathInput =
+                document.getElementById("manualCustomPath");
+
+            const addManualPathButton =
+                document.getElementById("addManualPathButton");
+
+            const customPathList =
+                document.getElementById("customPathList");
+
+            const customPathStatus =
+                document.getElementById("customPathStatus");
+
+            function getCustomPaths() {
+                if (!customPathList) {
+                    return [];
+                }
+
+                return Array.from(
+                    customPathList.querySelectorAll(
+                        ".settings-path-item"
+                    )
+                ).map(
+                    item => item.dataset.path
+                );
+            }
+
+            function addCustomPath(path) {
+                const existing =
+                    getCustomPaths().some(
+                        value =>
+                            value.toLowerCase()
+                            === path.toLowerCase()
+                    );
+
+                if (existing) {
+                    customPathStatus.textContent =
+                        ui.pathExists;
+
+                    customPathStatus.dataset.state =
+                        "warning";
+
+                    return;
+                }
+
+                const item =
+                    document.createElement("div");
+
+                item.className =
+                    "settings-path-item";
+
+                item.dataset.path =
+                    path;
+
+                const label =
+                    document.createElement("span");
+
+                label.textContent =
+                    path;
+
+                const remove =
+                    document.createElement("button");
+
+                remove.type =
+                    "button";
+
+                remove.className =
+                    "remove-custom-path";
+
+                remove.textContent =
+                    "×";
+
+                remove.addEventListener(
+                    "click",
+                    () => item.remove()
+                );
+
+                item.append(
+                    label,
+                    remove
+                );
+
+                customPathList.appendChild(
+                    item
+                );
+
+                customPathStatus.textContent =
+                    ui.pathAdded;
+
+                customPathStatus.dataset.state =
+                    "success";
+            }
+
+            customPathList
+                ?.querySelectorAll(".remove-custom-path")
+                .forEach(button => {
+                    button.addEventListener(
+                        "click",
+                        () => {
+                            button
+                                .closest(".settings-path-item")
+                                ?.remove();
+                        }
+                    );
+                });
+
+            showManualPathButton
+                ?.addEventListener(
+                    "click",
+                    () => {
+                        manualPathPanel.hidden =
+                            !manualPathPanel.hidden;
+
+                        if (!manualPathPanel.hidden) {
+                            manualPathInput.focus();
+                        }
+                    }
+                );
+
+            addManualPathButton
+                ?.addEventListener(
+                    "click",
+                    async () => {
+                        const value =
+                            manualPathInput.value.trim();
+
+                        if (!value) {
+                            customPathStatus.textContent =
+                                ui.pathEmpty;
+
+                            customPathStatus.dataset.state =
+                                "warning";
+
+                            return;
+                        }
+
+                        addManualPathButton.disabled =
+                            true;
+
+                        try {
+                            const response =
+                                await fetch(
+                                    "/settings/validate-local-path",
+                                    {
+                                        method: "POST",
+                                        headers: csrfHeaders(),
+                                        body: JSON.stringify({
+                                            path: value
+                                        })
+                                    }
+                                );
+
+                            const data =
+                                await readJson(response);
+
+                            if (!response.ok || !data.ok) {
+                                customPathStatus.textContent =
+                                    data.error
+                                    || ui.requestFailed;
+
+                                customPathStatus.dataset.state =
+                                    "error";
+
+                                return;
+                            }
+
+                            addCustomPath(
+                                data.path
+                            );
+
+                            manualPathInput.value =
+                                "";
+
+                        } catch {
+                            customPathStatus.textContent =
+                                ui.requestFailed;
+
+                            customPathStatus.dataset.state =
+                                "error";
+
+                        } finally {
+                            addManualPathButton.disabled =
+                                false;
+                        }
+                    }
+                );
+
+            const changeHotkeyButton =
+                document.getElementById("changeHotkeyButton");
+
+            const voiceHotkey =
+                document.getElementById("voiceHotkey");
+
+            const hotkeyCapture =
+                document.getElementById("hotkeyCapture");
+
+            let capturingHotkey =
+                false;
+
+            function normalizeKey(key) {
+                const aliases = {
+                    Control: "Ctrl",
+                    Alt: "Alt",
+                    Shift: "Shift",
+                    Meta: "Cmd",
+                    " ": "Space",
+                    Escape: "Esc",
+                    Enter: "Enter",
+                    Tab: "Tab"
+                };
+
+                if (aliases[key]) {
+                    return aliases[key];
+                }
+
+                if (
+                    /^F([1-9]|1[0-9]|2[0-4])$/
+                        .test(key)
+                ) {
+                    return key;
+                }
+
+                return key.length === 1
+                    ? key.toUpperCase()
+                    : key;
+            }
+
+            function buildHotkey(event) {
+                const modifiers =
+                    [];
+
+                if (event.ctrlKey) {
+                    modifiers.push("Ctrl");
+                }
+
+                if (event.altKey) {
+                    modifiers.push("Alt");
+                }
+
+                if (event.shiftKey) {
+                    modifiers.push("Shift");
+                }
+
+                if (event.metaKey) {
+                    modifiers.push("Cmd");
+                }
+
+                const key =
+                    normalizeKey(event.key);
+
+                if (
+                    ["Ctrl", "Alt", "Shift", "Cmd"]
+                        .includes(key)
+                ) {
+                    return null;
+                }
+
+                return [
+                    ...modifiers,
+                    key
+                ].join("+");
+            }
+
+            changeHotkeyButton
+                ?.addEventListener(
+                    "click",
+                    () => {
+                        capturingHotkey =
+                            true;
+
+                        hotkeyCapture.hidden =
+                            false;
+
+                        hotkeyCapture.textContent =
+                            ui.hotkeyCapture;
+
+                        changeHotkeyButton.disabled =
+                            true;
+                    }
+                );
+
+            document.addEventListener(
+                "keydown",
+                event => {
+                    if (!capturingHotkey) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const hotkey =
+                        buildHotkey(event);
+
+                    if (!hotkey) {
+                        return;
+                    }
+
+                    voiceHotkey.value =
+                        hotkey;
+
+                    capturingHotkey =
+                        false;
+
+                    changeHotkeyButton.disabled =
+                        false;
+
+                    if (hotkey.length === 1) {
+                        hotkeyCapture.hidden =
+                            false;
+
+                        hotkeyCapture.textContent =
+                            ui.hotkeySingleWarning;
+                    } else {
+                        hotkeyCapture.hidden =
+                            true;
+                    }
+                }
+            );
+
+            const showInfoButtons =
+                document.getElementById("showInfoButtons");
+
+            showInfoButtons
+                ?.addEventListener(
+                    "change",
+                    () => {
+                        document
+                            .querySelectorAll(".info-button")
+                            .forEach(button => {
+                                button.hidden =
+                                    !showInfoButtons.checked;
+                            });
+
+                        if (!showInfoButtons.checked) {
+                            document
+                                .querySelectorAll(".settings-info-box")
+                                .forEach(box => {
+                                    box.hidden =
+                                        true;
+                                });
+                        }
+                    }
+                );
+
+            const dataHistoryStatus =
+                document.getElementById("dataHistoryStatus");
+
+            const refreshDataSummary =
+                document.getElementById("refreshDataSummary");
+
+            function updateDataCounts(data) {
+                const values = {
+                    localHistoryCount:
+                        data.local_history,
+                    telegramHistoryCount:
+                        data.telegram_history,
+                    webHistoryCount:
+                        data.web_history,
+                    guestUsageCount:
+                        data.guest_usage
+                };
+
+                Object.entries(values)
+                    .forEach(([id, value]) => {
+                        const element =
+                            document.getElementById(id);
+
+                        if (element) {
+                            element.textContent =
+                                Number.isFinite(Number(value))
+                                    ? String(value)
+                                    : "0";
+                        }
+                    });
+            }
+
+            async function loadDataSummary(
+                showStatus = false
+            ) {
+                if (!refreshDataSummary) {
+                    return;
+                }
+
+                const oldText =
+                    refreshDataSummary.textContent;
+
+                refreshDataSummary.disabled =
+                    true;
+
+                refreshDataSummary.textContent =
+                    ui.loading;
+
+                try {
+                    const response =
+                        await fetch(
+                            "/settings/data-summary"
+                        );
+
+                    const data =
+                        await readJson(response);
+
+                    if (!response.ok || !data.ok) {
+                        if (dataHistoryStatus) {
+                            dataHistoryStatus.textContent =
+                                data.error
+                                || ui.requestFailed;
+
+                            dataHistoryStatus.dataset.state =
+                                "error";
+                        }
+
+                        return;
+                    }
+
+                    updateDataCounts(
+                        data
+                    );
+
+                    if (
+                        showStatus
+                        && dataHistoryStatus
+                    ) {
+                        dataHistoryStatus.textContent =
+                            ui.dataLoaded;
+
+                        dataHistoryStatus.dataset.state =
+                            "success";
+                    }
+
+                } catch {
+                    if (dataHistoryStatus) {
+                        dataHistoryStatus.textContent =
+                            ui.requestFailed;
+
+                        dataHistoryStatus.dataset.state =
+                            "error";
+                    }
+
+                } finally {
+                    refreshDataSummary.disabled =
+                        false;
+
+                    refreshDataSummary.textContent =
+                        oldText;
+                }
+            }
+
+            refreshDataSummary
+                ?.addEventListener(
+                    "click",
+                    () => loadDataSummary(true)
+                );
+
+            document
+                .querySelectorAll(".data-clear-button")
+                .forEach(button => {
+                    button.addEventListener(
+                        "click",
+                        async () => {
+                            const kind =
+                                button.dataset.kind;
+
+                            if (
+                                !window.confirm(
+                                    ui.confirm[kind]
+                                    || ui.requestFailed
+                                )
+                            ) {
+                                return;
+                            }
+
+                            const oldText =
+                                button.textContent;
+
+                            button.disabled =
+                                true;
+
+                            button.textContent =
+                                ui.loading;
+
+                            try {
+                                const response =
+                                    await fetch(
+                                        button.dataset.endpoint,
+                                        {
+                                            method: "POST",
+                                            headers: csrfHeaders(),
+                                            body: "{}"
+                                        }
+                                    );
+
+                                const data =
+                                    await readJson(response);
+
+                                if (!response.ok || !data.ok) {
+                                    dataHistoryStatus.textContent =
+                                        data.error
+                                        || ui.requestFailed;
+
+                                    dataHistoryStatus.dataset.state =
+                                        "error";
+
+                                    return;
+                                }
+
+                                const target =
+                                    document.getElementById(
+                                        button.dataset.target
+                                    );
+
+                                if (target) {
+                                    target.textContent =
+                                        "0";
+                                }
+
+                                dataHistoryStatus.textContent =
+                                    ui.dataCleared(
+                                        Number(data.deleted || 0)
+                                    );
+
+                                dataHistoryStatus.dataset.state =
+                                    "success";
+
+                                await loadDataSummary(
+                                    false
+                                );
+
+                            } catch {
+                                dataHistoryStatus.textContent =
+                                    ui.requestFailed;
+
+                                dataHistoryStatus.dataset.state =
+                                    "error";
+
+                            } finally {
+                                button.disabled =
+                                    false;
+
+                                button.textContent =
+                                    oldText;
+                            }
+                        }
+                    );
+                });
+
+            if (refreshDataSummary) {
+                loadDataSummary(false);
+            }
+
+            settingsForm.addEventListener(
+                "submit",
+                async event => {
+                    event.preventDefault();
+
+                    const saveButton =
+                        document.getElementById("saveSettingsButton");
+
+                    const result =
+                        document.getElementById("settingsResult");
+
+                    const webAccess =
+                        document.querySelector(
+                            'input[name="webAccess"]:checked'
+                        );
+
+                    const localAccess =
+                        document.querySelector(
+                            'input[name="localAccessMode"]:checked'
+                        );
+
+                    const customAcknowledged =
+                        document
+                            .getElementById("customAccessAcknowledged")
+                            .checked;
+
+                    if (
+                        localAccess?.value === "custom"
+                        && !customAcknowledged
+                    ) {
+                        result.hidden =
+                            false;
+
+                        result.dataset.state =
+                            "error";
+
+                        result.textContent =
+                            ui.riskRequired;
+
+                        return;
+                    }
+
+                    const oldText =
+                        saveButton.textContent;
+
+                    saveButton.disabled =
+                        true;
+
+                    saveButton.textContent =
+                        ui.saving;
+
+                    const payload = {
+                        general: {
+                            agent_name:
+                                document
+                                    .getElementById("agentName")
+                                    .value
+                                    .trim(),
+                            language:
+                                document
+                                    .getElementById("defaultLanguage")
+                                    .value
+                        },
+                        model: {
+                            ollama_host:
+                                document
+                                    .getElementById("ollamaHost")
+                                    .value
+                                    .trim(),
+                            chat_model:
+                                document
+                                    .getElementById("chatModel")
+                                    .value
+                                    .trim()
+                        },
+                        web: {
+                            enabled:
+                                document
+                                    .getElementById("webEnabled")
+                                    .checked,
+                            access:
+                                webAccess
+                                    ? webAccess.value
+                                    : "local",
+                            port:
+                                Number(
+                                    document
+                                        .getElementById("webPort")
+                                        .value
+                                ),
+                            open_browser:
+                                document
+                                    .getElementById("openBrowser")
+                                    .checked
+                        },
+                        telegram: {
+                            enabled:
+                                document
+                                    .getElementById("telegramEnabled")
+                                    .checked,
+                            bot_token:
+                                document
+                                    .getElementById("telegramToken")
+                                    .value
+                                    .trim(),
+                            authorized_user_id:
+                                document
+                                    .getElementById("telegramUserId")
+                                    .value
+                                    .trim()
+                        },
+                        voice: {
+                            enabled:
+                                document
+                                    .getElementById("voiceEnabled")
+                                    .checked,
+                            hotkey:
+                                voiceHotkey.value.trim(),
+                            scope:
+                                document
+                                    .getElementById("voiceScope")
+                                    .value
+                        },
+                        local_admin: {
+                            enabled:
+                                document
+                                    .getElementById("localAdminEnabled")
+                                    .checked,
+                            access_mode:
+                                localAccess
+                                    ? localAccess.value
+                                    : "safe",
+                            allowed_paths:
+                                getCustomPaths(),
+                            custom_access_acknowledged:
+                                customAcknowledged
+                        },
+                        help: {
+                            show_info_buttons:
+                                showInfoButtons.checked
+                        },
+                        web_admin: {
+                            username:
+                                document
+                                    .getElementById("webAdminUsername")
+                                    .value
+                                    .trim(),
+                            password:
+                                document
+                                    .getElementById("webAdminPassword")
+                                    .value
+                        }
+                    };
+
+                    try {
+                        const response =
+                            await fetch(
+                                "/settings",
+                                {
+                                    method: "POST",
+                                    headers: csrfHeaders(),
+                                    body:
+                                        JSON.stringify(payload)
+                                }
+                            );
+
+                        const data =
+                            await readJson(response);
+
+                        result.hidden =
+                            false;
+
+                        if (!response.ok || !data.ok) {
+                            result.dataset.state =
+                                "error";
+
+                            result.textContent =
+                                data.error
+                                || ui.requestFailed;
+
+                            return;
+                        }
+
+                        if (data.csrf_token) {
+                            csrfToken =
+                                data.csrf_token;
+
+                            document.body.dataset.csrfToken =
+                                csrfToken;
+                        }
+
+                        result.dataset.state =
+                            "success";
+
+                        const messages = [
+                            data.message
+                        ];
+
+                        if (data.admin_message) {
+                            messages.push(
+                                data.admin_message
+                            );
+                        }
+
+                        if (
+                            data.restart_required
+                            && data.restart_message
+                        ) {
+                            messages.push(
+                                data.restart_message
+                            );
+                        }
+
+                        result.textContent =
+                            messages
+                                .filter(Boolean)
+                                .join(" ");
+
+                        document
+                            .getElementById("webAdminPassword")
+                            .value = "";
+
+                    } catch {
+                        result.hidden =
+                            false;
+
+                        result.dataset.state =
+                            "error";
+
+                        result.textContent =
+                            ui.requestFailed;
+
+                    } finally {
+                        saveButton.disabled =
+                            false;
+
+                        saveButton.textContent =
+                            oldText;
+                    }
+                }
+            );
+        }
+    </script>
+</body>
+</html>

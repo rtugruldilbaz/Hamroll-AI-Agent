@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {{ agent_name }} -
+        {{ "Kayıt Ol" if language == "tr" else "Register" }}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+</head>
+
+<body>
+    <div class="auth-page">
+        <div class="auth-language">
+            <button
+                id="authLanguageButton"
+                class="web-language-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+            >
+                <span>
+                    {{ "Dil" if language == "tr" else "Language" }}:
+                </span>
+
+                <span>
+                    {{ "TR" if language == "tr" else "EN" }}
+                </span>
+            </button>
+
+            <div
+                id="authLanguageMenu"
+                class="web-language-menu"
+                hidden
+            >
+                <button
+                    type="button"
+                    data-language="tr"
+                >
+                    TR Türkçe
+                </button>
+
+                <button
+                    type="button"
+                    data-language="en"
+                >
+                    EN English
+                </button>
+            </div>
+        </div>
+
+        <div class="auth-card">
+            <h1 class="auth-title">
+                {{ agent_name }}
+            </h1>
+
+            <h2>
+                {{ "Kayıt Ol" if language == "tr" else "Register" }}
+            </h2>
+
+            <p class="auth-subtitle">
+                {{ "Yeni hesabınızı oluşturun." if language == "tr" else "Create your new account." }}
+            </p>
+
+            {% if error %}
+                <div class="auth-error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form
+                id="registerForm"
+                action="/register"
+                method="post"
+                class="auth-form"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <div class="auth-field">
+                    <label for="username">
+                        {{ "Kullanıcı Adı" if language == "tr" else "Username" }}
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autocomplete="username"
+                        minlength="3"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">
+                        {{ "Şifre" if language == "tr" else "Password" }}
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="new-password"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="auth-primary-button"
+                >
+                    {{ "Kayıt Ol" if language == "tr" else "Register" }}
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <span>
+                    {{ "Zaten hesabınız var mı?" if language == "tr" else "Already have an account?" }}
+                </span>
+
+                <a href="/login">
+                    {{ "Giriş Yap" if language == "tr" else "Log In" }}
+                </a>
+            </div>
+
+            <a
+                href="/"
+                class="auth-guest-link"
+            >
+                {{ "Misafir olarak devam et" if language == "tr" else "Continue as guest" }}
+            </a>
+
+            <a
+                href="/settings"
+                class="auth-guest-link"
+            >
+                {{ "Ayarlar" if language == "tr" else "Settings" }}
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const registerForm =
+            document.getElementById("registerForm");
+
+        const csrfToken =
+            registerForm.elements.csrf_token.value;
+
+        const languageButton =
+            document.getElementById("authLanguageButton");
+
+        const languageMenu =
+            document.getElementById("authLanguageMenu");
+
+        languageButton.addEventListener(
+            "click",
+            event => {
+                event.stopPropagation();
+
+                languageMenu.hidden =
+                    !languageMenu.hidden;
+
+                languageButton.setAttribute(
+                    "aria-expanded",
+                    String(
+                        !languageMenu.hidden
+                    )
+                );
+            }
+        );
+
+        languageMenu
+            .querySelectorAll("[data-language]")
+            .forEach(button => {
+                button.addEventListener(
+                    "click",
+                    async () => {
+                        const response =
+                            await fetch(
+                                "/language",
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json",
+                                        "X-CSRF-Token":
+                                            csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        language:
+                                            button.dataset.language
+                                    })
+                                }
+                            );
+
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    }
+                );
+            });
+
+        document.addEventListener(
+            "click",
+            event => {
+                if (
+                    !languageButton.contains(
+                        event.target
+                    )
+                    && !languageMenu.contains(
+                        event.target
+                    )
+                ) {
+                    languageMenu.hidden = true;
+
+                    languageButton.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+                }
+            }
+        );
+    </script>
+</body>
+</html>

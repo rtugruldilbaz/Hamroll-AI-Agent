@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ agent_name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body
+    data-logged-in="{{ '1' if logged_in else '0' }}"
+    data-remembered="{{ '1' if remembered else '0' }}"
+    data-role="{{ role }}"
+    data-language="{{ language }}"
+    data-csrf-token="{{ csrf_token }}"
+>
+    <div class="page">
+        <header class="topbar">
+            <h1 id="mainAgentTitle">{{ agent_name }}</h1>
+
+            <div class="user-panel">
+                <div class="web-language">
+                    <button
+                        id="webLanguageButton"
+                        class="web-language-button"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                    >
+                        <span>{{ "Dil" if language == "tr" else "Language" }}:</span>
+                        <span>{{ "TR" if language == "tr" else "EN" }}</span>
+                    </button>
+
+                    <div id="webLanguageMenu" class="web-language-menu" hidden>
+                        <button type="button" data-language="tr">TR Türkçe</button>
+                        <button type="button" data-language="en">EN English</button>
+                    </div>
+                </div>
+
+                {% if is_admin %}
+                    <a href="/settings">
+                        {{ "Ayarlar" if language == "tr" else "Settings" }}
+                    </a>
+                {% endif %}
+
+                {% if logged_in %}
+                    <div class="user-badge">
+                        {% if is_admin %}
+                            <span class="user-name">Admin</span>
+                        {% else %}
+                            <span class="user-label">
+                                {{ "Kullanıcı" if language == "tr" else "User" }}
+                            </span>
+                            <span class="user-name">{{ username }}</span>
+                        {% endif %}
+                    </div>
+
+                    <form action="/logout" method="post" class="logout-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="logout-button">
+                            {{ "Çıkış Yap" if language == "tr" else "Log Out" }}
+                        </button>
+                    </form>
+                {% else %}
+                    <span class="guest-info">
+                        {{ "Misafir" if language == "tr" else "Guest" }}
+                        ·
+                        {{ "Kalan hak" if language == "tr" else "Messages left" }}:
+                        <span id="guestRemaining">{{ guest_remaining }}</span> / 5
+                    </span>
+
+                    <a href="/login">
+                        {{ "Giriş Yap" if language == "tr" else "Log In" }}
+                    </a>
+
+                    <a href="/register">
+                        {{ "Kayıt Ol" if language == "tr" else "Register" }}
+                    </a>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="chat-shell">
+            <div id="composerDock" class="composer-dock">
+                <div id="activeToolBar" class="active-tool-bar" hidden>
+                    <div class="active-tool-chip">
+                        <span class="active-tool-status" aria-hidden="true"></span>
+                        <span id="activeToolName" class="active-tool-name"></span>
+
+                        <button
+                            id="clearActiveTool"
+                            class="active-tool-close"
+                            type="button"
+                            title="{{ 'Aracı kapat' if language == 'tr' else 'Clear tool' }}"
+                            aria-label="{{ 'Aktif aracı kapat' if language == 'tr' else 'Clear active tool' }}"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+
+                <div class="composer">
+                    <div class="tools-anchor">
+                        <button
+                            id="toolsButton"
+                            class="icon-button"
+                            type="button"
+                            title="{{ 'Araçlar' if language == 'tr' else 'Tools' }}"
+                            aria-label="{{ 'Araçları aç' if language == 'tr' else 'Open tools' }}"
+                        >
+                            +
+                        </button>
+
+                        <div id="toolsMenu" class="floating-menu tools-menu" hidden>
+                            <div class="menu-head">
+                                {{ "Araçlar" if language == "tr" else "Tools" }}
+                            </div>
+
+                            <button class="menu-item" data-tool="upload" type="button">
+                                <span class="menu-icon">↑</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya Yükle" if language == "tr" else "Upload File" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Agent'a belge ekle" if language == "tr" else "Add a document to the Agent" }}
+                                    </small>
+                                </span>
+                            </button>
+
+                            <div class="menu-section">
+                                {{ "Dosya İşlemleri" if language == "tr" else "File Operations" }}
+                            </div>
+
+                            <button class="menu-item admin-tool" data-tool="create" type="button">
+                                <span class="menu-icon">＋</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya Oluştur" if language == "tr" else "Create File" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Yeni dosya oluştur" if language == "tr" else "Create a new file" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="read" type="button">
+                                <span class="menu-icon">◫</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya Oku" if language == "tr" else "Read File" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Dosya içeriğini getir" if language == "tr" else "Read file contents" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="write" type="button">
+                                <span class="menu-icon">✎</span>
+                                <span>
+                                    <strong>
+                                        {{ "Yaz / Ekle" if language == "tr" else "Write / Append" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Dosya içeriğini değiştir" if language == "tr" else "Modify file contents" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="search-files" type="button">
+                                <span class="menu-icon">⌕</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya Ara" if language == "tr" else "Search Files" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Bilgisayarda dosya bul" if language == "tr" else "Find files on the computer" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="list" type="button">
+                                <span class="menu-icon">≡</span>
+                                <span>
+                                    <strong>
+                                        {{ "Klasör Listele" if language == "tr" else "List Folder" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Klasör içeriğini göster" if language == "tr" else "Show folder contents" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="open" type="button">
+                                <span class="menu-icon">↗</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya / Klasör Aç" if language == "tr" else "Open File / Folder" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Windows üzerinde aç" if language == "tr" else "Open with Windows" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="rename" type="button">
+                                <span class="menu-icon">A</span>
+                                <span>
+                                    <strong>
+                                        {{ "Yeniden Adlandır" if language == "tr" else "Rename" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Dosya adını değiştir" if language == "tr" else "Change a file name" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="move" type="button">
+                                <span class="menu-icon">⇢</span>
+                                <span>
+                                    <strong>{{ "Taşı" if language == "tr" else "Move" }}</strong>
+                                    <small>
+                                        {{ "Dosyayı başka konuma taşı" if language == "tr" else "Move a file to another location" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button class="menu-item admin-tool" data-tool="delete" type="button">
+                                <span class="menu-icon">×</span>
+                                <span>
+                                    <strong>{{ "Sil" if language == "tr" else "Delete" }}</strong>
+                                    <small>
+                                        {{ "Geri Dönüşüm Kutusu'na taşı" if language == "tr" else "Move to Recycle Bin" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <div class="menu-section">Telegram</div>
+
+                            <button
+                                class="menu-item login-tool"
+                                data-tool="telegram-message"
+                                type="button"
+                            >
+                                <span class="menu-icon">↗</span>
+                                <span>
+                                    <strong>
+                                        {{ "Mesaj Gönder" if language == "tr" else "Send Message" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Telegram hesabına mesaj gönder" if language == "tr" else "Send a Telegram message" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <button
+                                class="menu-item admin-tool"
+                                data-tool="telegram-file"
+                                type="button"
+                            >
+                                <span class="menu-icon">⤴</span>
+                                <span>
+                                    <strong>
+                                        {{ "Dosya Gönder" if language == "tr" else "Send File" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Telegram hesabına dosya gönder" if language == "tr" else "Send a file through Telegram" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+
+                            <div class="menu-section">Agent</div>
+
+                            <button class="menu-item" data-tool="rag" type="button">
+                                <span class="menu-icon">◈</span>
+                                <span>
+                                    <strong>
+                                        {{ "Belgelerde Ara" if language == "tr" else "Search Documents" }}
+                                    </strong>
+                                    <small>
+                                        {{ "RAG ile doküman ara" if language == "tr" else "Search indexed documents with RAG" }}
+                                    </small>
+                                </span>
+                            </button>
+
+                            <button class="menu-item login-tool" data-tool="history" type="button">
+                                <span class="menu-icon">↶</span>
+                                <span>
+                                    <strong>
+                                        {{ "Geçmiş" if language == "tr" else "History" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Önceki konuşmaları getir" if language == "tr" else "Retrieve previous conversations" }}
+                                    </small>
+                                </span>
+                                <span class="tool-lock">🔒</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="recordingPanel" class="recording-panel" hidden>
+                        <button
+                            id="cancelRecording"
+                            class="record-cancel"
+                            type="button"
+                            title="{{ 'Kaydı sil' if language == 'tr' else 'Discard recording' }}"
+                            aria-label="{{ 'Ses kaydını iptal et' if language == 'tr' else 'Cancel voice recording' }}"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 7h16"></path>
+                                <path d="M9 7V4h6v3"></path>
+                                <path d="M7 7l1 13h8l1-13"></path>
+                                <path d="M10 11v5"></path>
+                                <path d="M14 11v5"></path>
+                            </svg>
+                        </button>
+
+                        <span id="recordingTime" class="record-time">00:00</span>
+                        <div id="voiceWave" class="voice-wave"></div>
+                    </div>
+
+                    <textarea
+                        id="messageInput"
+                        rows="1"
+                        placeholder="{{ 'Mesajınızı yazın...' if language == 'tr' else 'Type your message...' }}"
+                        aria-label="{{ 'Mesaj' if language == 'tr' else 'Message' }}"
+                    ></textarea>
+
+                    <div class="voice-anchor">
+                        <button
+                            id="voiceButton"
+                            class="icon-button voice-button"
+                            type="button"
+                            title="{{ 'Ses' if language == 'tr' else 'Voice' }}"
+                            aria-label="{{ 'Ses seçenekleri' if language == 'tr' else 'Voice options' }}"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"></path>
+                                <path d="M6.5 11.5v.5a5.5 5.5 0 0 0 11 0v-.5"></path>
+                                <path d="M12 17.5V21"></path>
+                                <path d="M9.5 21h5"></path>
+                            </svg>
+                        </button>
+
+                        <div id="voiceMenu" class="floating-menu voice-menu" hidden>
+                            <div class="menu-head">
+                                {{ "Ses" if language == "tr" else "Voice" }}
+                            </div>
+
+                            <button
+                                id="startVoiceRecording"
+                                class="menu-item"
+                                type="button"
+                            >
+                                <span class="menu-icon">●</span>
+                                <span>
+                                    <strong>
+                                        {{ "Ses algılamayı başlat" if language == "tr" else "Start Recording" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Maksimum 30 saniye" if language == "tr" else "Maximum 30 seconds" }}
+                                    </small>
+                                </span>
+                            </button>
+
+                            <button
+                                id="uploadVoiceFile"
+                                class="menu-item"
+                                type="button"
+                            >
+                                <span class="menu-icon">↑</span>
+                                <span>
+                                    <strong>
+                                        {{ "Ses dosyası gönder" if language == "tr" else "Upload Audio File" }}
+                                    </strong>
+                                    <small>
+                                        {{ "Whisper ile metne çevir" if language == "tr" else "Transcribe with Whisper" }}
+                                    </small>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        id="sendButton"
+                        class="send-button"
+                        type="button"
+                        title="{{ 'Gönder' if language == 'tr' else 'Send' }}"
+                        aria-label="{{ 'Mesajı gönder' if language == 'tr' else 'Send message' }}"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 12h13"></path>
+                            <path d="m14 7 5 5-5 5"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <input id="audioFileInput" type="file" accept="audio/*" hidden>
+            <input
+                id="generalFileInput"
+                type="file"
+                accept=".pdf,.docx,.txt,.md,.csv,.json"
+                hidden
+            >
+
+            <div id="thinking" hidden>
+                <div class="spinner"></div>
+                <span id="thinkingText">
+                    {{ "Agent düşünüyor." if language == "tr" else "Agent is thinking." }}
+                </span>
+            </div>
+
+            <div id="confirmationButtons" hidden>
+                <button id="detailsButton" type="button">
+                    {{ "Ne değişiyor?" if language == "tr" else "What changes?" }}
+                </button>
+
+                <button id="yesButton" type="button">
+                    {{ "Evet" if language == "tr" else "Yes" }}
+                </button>
+
+                <button id="noButton" type="button">
+                    {{ "Hayır" if language == "tr" else "No" }}
+                </button>
+            </div>
+
+            <div id="chat">
+                <div class="message-row agent-row">
+                    <div class="message agent-message default-message">
+                        {{ "Merhaba, nasıl yardımcı olabilirim?" if language == "tr" else "Hello, how can I help you?" }}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div
+        id="floatingAgentTitle"
+        class="floating-agent-title"
+        aria-hidden="true"
+    >
+        {{ agent_name }}
+    </div>
+
+    <div
+        class="scroll-controls"
+        aria-label="{{ 'Sayfa gezinme' if language == 'tr' else 'Page navigation' }}"
+    >
+        <button
+            id="scrollTopButton"
+            class="scroll-control"
+            type="button"
+            data-tooltip="{{ 'Sayfanın en üstüne çık' if language == 'tr' else 'Scroll to top' }}"
+            aria-label="{{ 'Sayfanın en üstüne çık' if language == 'tr' else 'Scroll to top' }}"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m7 14 5-5 5 5"></path>
+            </svg>
+        </button>
+
+        <button
+            id="scrollBottomButton"
+            class="scroll-control"
+            type="button"
+            data-tooltip="{{ 'Sayfanın en altına in' if language == 'tr' else 'Scroll to bottom' }}"
+            aria-label="{{ 'Sayfanın en altına in' if language == 'tr' else 'Scroll to bottom' }}"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m7 10 5 5 5-5"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script>
+        const loggedIn = document.body.dataset.loggedIn === "1";
+        const remembered = document.body.dataset.remembered === "1";
+        const pageCsrfToken = document.body.dataset.csrfToken;
+
+        const webLanguageButton =
+            document.getElementById("webLanguageButton");
+
+        const webLanguageMenu =
+            document.getElementById("webLanguageMenu");
+
+        if (
+            loggedIn
+            && !remembered
+            && !sessionStorage.getItem("aiAgentBrowserSession")
+        ) {
+            fetch("/browser-session-reset", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": pageCsrfToken
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            });
+        }
+
+        if (webLanguageButton && webLanguageMenu) {
+            webLanguageButton.addEventListener("click", event => {
+                event.stopPropagation();
+                webLanguageMenu.hidden = !webLanguageMenu.hidden;
+
+                webLanguageButton.setAttribute(
+                    "aria-expanded",
+                    String(!webLanguageMenu.hidden)
+                );
+            });
+
+            webLanguageMenu
+                .querySelectorAll("[data-language]")
+                .forEach(button => {
+                    button.addEventListener("click", async () => {
+                        const response = await fetch("/language", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-Token": pageCsrfToken
+                            },
+                            body: JSON.stringify({
+                                language: button.dataset.language
+                            })
+                        });
+
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                });
+
+            document.addEventListener("click", event => {
+                if (
+                    !webLanguageButton.contains(event.target)
+                    && !webLanguageMenu.contains(event.target)
+                ) {
+                    webLanguageMenu.hidden = true;
+                    webLanguageButton.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+                }
+            });
+        }
+    </script>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
